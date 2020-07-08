@@ -16,7 +16,7 @@ let thisDay;
 let index;
 let objectDay;
 let mapNotes = new Map();
-console.log('это новая ветка')
+console.log('это новая ветка');
 
 class Notes { // класс для работы с заметками
     constructor(year, month, day, note = '') {
