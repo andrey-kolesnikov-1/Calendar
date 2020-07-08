@@ -1,21 +1,21 @@
-let days = document.querySelector('.days');
-let infoMonth = document.querySelector('.infoLabel');
-let header = document.querySelector('.header');
-let arrows = header.querySelectorAll('.btn');
-let modalWindow = document.querySelector('.modal');
-let text = document.querySelector('.text');
-let divBtnModal = document.querySelector('.modal_btn');
-let btnModal = document.querySelectorAll('.m_btn');
-let toolTip = document.querySelector('.tooltip');
-let currentDate = {
-    year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1
-};
-let thisDay;
-let index;
-let objectDay;
-let mapNotes = new Map();
-let selectedDay;
+let days = document.querySelector('.days'),
+    infoMonth = document.querySelector('.infoLabel'),
+    header = document.querySelector('.header'),
+    arrows = header.querySelectorAll('.btn'),
+    modalWindow = document.querySelector('.modal'),
+    text = document.querySelector('.text'),
+    divBtnModal = document.querySelector('.modal_btn'),
+    btnModal = document.querySelectorAll('.m_btn'),
+    toolTip = document.querySelector('.tooltip'),
+    currentDate = {
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1
+    },
+    thisDay,
+    index,
+    objectDay,
+    mapNotes = new Map(),
+    selectedDay;
 
 class Notes { // класс для работы с заметками
     constructor(year, month, day, note = '') {
@@ -38,8 +38,7 @@ class Notes { // класс для работы с заметками
 header.addEventListener('click', (event) => {
     arrows.forEach((value, key) => {
         if (event.target.closest('.btn') == value) {
-            if (key === 0) prevMonth();
-            if (key === 1) nextMonth();
+            key === 0 ? prevMonth() : nextMonth();
         }
     });
 });
@@ -47,13 +46,13 @@ header.addEventListener('click', (event) => {
 // функция переключения на один месяц назад
 function prevMonth() {
     currentDate.month -= 1;
-    createDays(date(currentDate));
+    createDays();
 }
 
 // функция переключения на один месяц вперёд
 function nextMonth() {
     currentDate.month += 1;
-    createDays(date(currentDate));
+    createDays();
 }
 
 // обработка нажатия на конкретный день месяца
@@ -110,12 +109,7 @@ days.addEventListener('mouseover', (event) => {
 
 // обработка скрытия подсказки при убирании курсора мыши с дня месяца
 days.addEventListener('mouseout', (event) => {
-    let numDay = days.querySelectorAll('.day');
-    numDay.forEach((value) => {
-        if (event.target == value) {
-            disableToolTip();
-        }
-    });
+    disableToolTip();
 });
 
 // исчезание окна подсказки
@@ -132,7 +126,7 @@ document.getElementById('btnDelete').addEventListener('click', () => {
 });
 
 // нажата кнопка "Отмена"
-document.getElementById('btnCansel').addEventListener('click', () => {
+document.getElementById('btnCancel').addEventListener('click', () => {
     closeModal();
 });
 
@@ -146,7 +140,7 @@ document.getElementById('btnApply').addEventListener('click', () => {
         let note = new Notes(currentDate.year, currentDate.month, index, text.value);
         mapNotes.set(selectedDay, note);
         objectDay.classList.add('select_day');
-        createDays(date(currentDate));
+        createDays();
         closeModal();
     }
 });
@@ -161,27 +155,26 @@ function closeModal() {
 
 // функция определения количества дней в месяце заданной даты и определение текущего месяца
 function date(obj) {
-    let selectDate = new Date(obj.year, obj.month, 0);
-    let currentDate = new Date();
+    let selectDate = new Date(obj.year, obj.month, 0),
+        currentDate = new Date(),
+        month = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
     thisDay = currentDate.getFullYear() === obj.year && currentDate.getMonth() + 1 === obj.month;
-    setInfoMonth(selectDate);
+    infoMonth.textContent = `${month[selectDate.getMonth()]} ${selectDate.getFullYear()}`;
     return selectDate.getDate();
 }
 
-// функция вывода названия месяца и года в заголовок календаря
-function setInfoMonth(date) {
-    let month = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-    infoMonth.textContent = `${month[date.getMonth()]} ${date.getFullYear()}`;
-}
-
 // функция генерации и вывода дней месяца
-function createDays(monthDays) {
+function createDays() {
     let day = document.querySelectorAll('.day');
     day.forEach((value) => {
         value.remove();
     })
 
-    let el, label, currentDay = new Date().getDate();
+    let el,
+        label,
+        currentDay = new Date().getDate(),
+        monthDays = date(currentDate);
+
     for (let i = 1; i <= monthDays; i++) {
         el = document.createElement("div");
         el.classList = 'day';
@@ -203,4 +196,4 @@ function createDays(monthDays) {
 }
 
 disableToolTip();
-createDays(date(currentDate));
+createDays();
