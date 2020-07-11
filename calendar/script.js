@@ -4,8 +4,6 @@ let days = document.querySelector('.days'),
     arrows = header.querySelectorAll('.btn'),
     modalWindow = document.querySelector('.modal'),
     text = document.querySelector('.text'),
-    divBtnModal = document.querySelector('.modal_btn'),
-    btnModal = document.querySelectorAll('.m_btn'),
     toolTip = document.querySelector('.tooltip'),
     currentDate = {
         year: new Date().getFullYear(),
@@ -15,6 +13,7 @@ let days = document.querySelector('.days'),
     index,
     objectDay,
     mapNotes = new Map(),
+    mapWeekend = new Map(),
     selectedDay;
 
 class Notes { // класс для работы с заметками
@@ -33,7 +32,81 @@ class Notes { // класс для работы с заметками
     }
 }
 
+const localMapKey = 'map',
+    localWriteKey = 'write_flag',
+    localNotesKey = 'notes',
+    gistYear = 5, // 
+    tempData = {
+        year: new Date().getFullYear() - gistYear,
+        month: new Date().getMonth() + 1
+    };
+
+if (localStorage.getItem(localNotesKey) !== null) {
+    mapNotes = new Map(JSON.parse(localStorage.getItem(localNotesKey)));
+}
 ///////////////////////////////////////////////////////////////////////////////////////
+
+function statusDay(url) {
+    return new Promise((resolve) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.onload = () => {
+            resolve(xhr.response);
+        };
+        xhr.send();
+    });
+}
+
+function converterDateToStr(date) {
+    return ('' + date).length < 2 ? '0' + date : '' + date;
+}
+
+async function weekend(date) {
+    let selectDate = new Date(date.year, date.month, 0);
+    const arr = [];
+    for (let i = 1; i <= selectDate.getDate(); i++) {
+        let url = `https://isdayoff.ru/${selectDate.getFullYear()}${converterDateToStr(selectDate.getMonth() + 1)}${converterDateToStr(i)}?cc=ua`;
+        await statusDay(url).then((data) => {
+            arr[i] = data;
+        });
+    }
+    return arr;
+}
+
+// заполняем массив месяцами с отмечанными выходными днями
+// выборка годов +- 5 лет от текущей даты
+async function parseWeekend() {
+    const mapWeekend = new Map(); // список выходных дней
+    for (let i = 1; i <= 24 * gistYear; i++) {
+        await weekend(tempData).then((data) => {
+            mapWeekend.set(tempData.year * 12 + tempData.month, data);
+        });
+        tempData.month += 1;
+        document.querySelector('progress').value = (100 * i) / (24 * gistYear);
+    }
+    return mapWeekend;
+}
+
+function getMapWeekend() {
+    if (localStorage.getItem(localWriteKey) === 'true') {
+        document.querySelector('.progressDiv').style.display = 'none';
+        let strMap = localStorage.getItem(localMapKey);
+        mapWeekend = new Map(JSON.parse(strMap));
+    }
+}
+
+if (localStorage.getItem(localWriteKey) === null) {
+    parseWeekend().then((data) => {
+        let strMap = JSON.stringify([...data]); // Преобразовываем Map в массив, а затем в строку для хранения в локалбном хранилище
+        localStorage.setItem(localMapKey, strMap); // сохраняем в памяти
+        localStorage.setItem(localWriteKey, 'true'); // выставляем флаг сохранения данных
+        getMapWeekend();
+        createDays();
+    });
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+
 // обработка кнопок переключения даты
 header.addEventListener('click', (event) => {
     arrows.forEach((value, key) => {
@@ -108,7 +181,7 @@ days.addEventListener('mouseover', (event) => {
 });
 
 // обработка скрытия подсказки при убирании курсора мыши с дня месяца
-days.addEventListener('mouseout', (event) => {
+days.addEventListener('mouseout', () => {
     disableToolTip();
 });
 
@@ -120,6 +193,7 @@ function disableToolTip() {
 // нажата кнопка "Удалить"
 document.getElementById('btnDelete').addEventListener('click', () => {
     mapNotes.delete(selectedDay);
+    saveMapNotes();
     objectDay.classList.remove('select_day');
     objectDay.classList.remove('select_day_currentDay');
     closeModal();
@@ -140,10 +214,17 @@ document.getElementById('btnApply').addEventListener('click', () => {
         let note = new Notes(currentDate.year, currentDate.month, index, text.value);
         mapNotes.set(selectedDay, note);
         objectDay.classList.add('select_day');
+        saveMapNotes();
         createDays();
         closeModal();
     }
 });
+
+// фунция сохранения карты заметок в локальном хранилище
+function saveMapNotes() {
+    let strMap = JSON.stringify([...mapNotes]); // Преобразовываем Map в массив, а затем в строку для хранения в локалбном хранилище
+    localStorage.setItem(localNotesKey, strMap); // сохраняем в памяти
+}
 
 // функция закрытия модального окна
 function closeModal() {
@@ -168,7 +249,7 @@ function createDays() {
     let day = document.querySelectorAll('.day');
     day.forEach((value) => {
         value.remove();
-    })
+    });
 
     let el,
         label,
@@ -176,9 +257,9 @@ function createDays() {
         monthDays = date(currentDate);
 
     for (let i = 1; i <= monthDays; i++) {
-        el = document.createElement("div");
+        el = document.createElement('div');
         el.classList = 'day';
-        label = document.createElement("label");
+        label = document.createElement('label');
         label.textContent = '' + (i);
         if (thisDay && i === currentDay) {
             label.style.color = 'red';
@@ -190,10 +271,15 @@ function createDays() {
         if (mapNotes.has(Notes.mathFullDay(currentDate.year, currentDate.month, i))) {
             el.classList.add('select_day');
         }
+        if (localStorage.getItem(localWriteKey) === 'true') {
+            let days = mapWeekend.get(currentDate.year * 12 + currentDate.month);
+            (days !== undefined && days[i] === '1') ? el.classList.add('holiday_day'): el.classList.remove('holiday_day');
+        }
         el.appendChild(label);
         days.appendChild(el);
     }
 }
 
+getMapWeekend();
 disableToolTip();
 createDays();

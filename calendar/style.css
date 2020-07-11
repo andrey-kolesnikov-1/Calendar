@@ -21,6 +21,7 @@ body {
 }
 
 .btn {
+    display: block;
     width: 50px;
     height: 50px;
     transition: opacity 0.5s;
@@ -29,6 +30,10 @@ body {
 
 .btn:hover {
     opacity: 1;
+}
+
+.btn_off {
+    display: none;
 }
 
 .left_btn {
@@ -84,14 +89,6 @@ body {
     animation: anim 0.5s ease-out;
 }
 
-.select_day {
-    background-color: rgb(231, 132, 85);
-}
-
-.select_day_currentDay {
-    animation: sel_curr_day 2s ease-out infinite;
-}
-
 @keyframes sel_curr_day {
     from {
         background-color: rgb(253, 244, 116);
@@ -108,12 +105,28 @@ body {
 
 .day:hover {
     background-color: rgb(0, 160, 80);
-    /* background-color: rgb(241, 226, 8); */
+}
+
+.holiday_day {
+    background-color: rgb(236, 68, 68);
+}
+
+.holiday_day:hover {
+    background-color: rgb(245, 7, 7);
+}
+
+.select_day {
+    background-color: rgb(231, 132, 85);
+}
+
+.select_day_currentDay {
+    animation: sel_curr_day 2s ease-out infinite;
 }
 
 .select_day:hover {
     background-color: rgb(221, 87, 25);
 }
+
 
 .currentDay {
     background-color: rgb(253, 244, 116);
@@ -227,7 +240,6 @@ body {
     padding: 5px 10px;
     border: 1px solid #b3c9ce;
     border-radius: 4px;
-    /* text-align: center; */
     font: italic 14px/1.3 sans-serif;
     color: #333;
     background: #fff;
@@ -239,4 +251,8 @@ body {
 
 .tooltiparea {
     margin: 0px;
+}
+
+.progressDiv {
+    text-align: center;
 }
